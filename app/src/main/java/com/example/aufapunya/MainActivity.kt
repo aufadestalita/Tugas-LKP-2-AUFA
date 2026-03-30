@@ -5,21 +5,24 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.aufapunya.model.InfoJurusan
 import com.example.aufapunya.model.InfoSource
 import com.example.aufapunya.ui.theme.AufaPunyaTheme
@@ -30,76 +33,82 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             AufaPunyaTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    InfoJurusanList(modifier = Modifier.padding(innerPadding))
-                }
+
+                DaftarInfoScreen()
             }
         }
     }
 }
 
 @Composable
-fun InfoJurusanList(modifier: Modifier = Modifier) {
-    LazyColumn(
-        modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp) // Jarak antar kartu diperkecil sedikit
+fun DaftarInfoScreen() {
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(24.dp)
     ) {
-        items(InfoSource.dummyInfoJurusan) { info ->
-            InfoJurusanCard(info = info)
+
+        InfoSource.dummyInfoJurusan.forEach { info ->
+            InfoDetailCard(info = info)
+
+
+            Spacer(modifier = Modifier.height(32.dp))
         }
     }
 }
 
 @Composable
-fun InfoJurusanCard(info: InfoJurusan) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp), // Radius sudut lebih pas untuk gambar kecil
-        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
-    ) {
-        Column {
-            Image(
-                painter = painterResource(id = info.imageRes),
-                contentDescription = "Project Image",
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(110.dp) // Ukuran gambar lebih ringkas
-                    .clip(RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp)),
-                contentScale = ContentScale.Crop
-            )
+fun InfoDetailCard(info: InfoJurusan) {
 
-            Column(modifier = Modifier.padding(12.dp)) {
-                Text(
-                    text = info.namaJurusan,
-                    fontSize = 17.sp, // Ukuran judul disesuaikan
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
+    Column(modifier = Modifier.fillMaxWidth()) {
 
-                HorizontalDivider(modifier = Modifier.padding(vertical = 6.dp))
+        Image(
+            painter = painterResource(id = info.imageRes),
+            contentDescription = info.namaJurusan,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(220.dp),
+            contentScale = ContentScale.Crop
+        )
 
-                Text(
-                    text = info.deskripsi,
-                    fontSize = 13.sp,
-                    lineHeight = 18.sp,
-                    maxLines = 2, // Batasi 2 baris agar item berikutnya terlihat
-                    overflow = TextOverflow.Ellipsis
-                )
+        Spacer(modifier = Modifier.height(16.dp))
 
-                Spacer(modifier = Modifier.height(6.dp))
 
-                Text(
-                    text = "Prospek: ${info.prospekKerja}",
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.secondary,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
+        Text(
+            text = info.namaJurusan,
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+
+        Text(
+            text = info.deskripsi,
+            style = MaterialTheme.typography.bodyLarge
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+
+        Text(
+            text = "Prospek Kerja: ${info.prospekKerja}",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.secondary
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+
+        Button(
+            onClick = { /* Handle klik di sini jika perlu */ },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Lihat Detail Jurusan")
         }
     }
 }
@@ -108,6 +117,6 @@ fun InfoJurusanCard(info: InfoJurusan) {
 @Composable
 fun InfoJurusanPreview() {
     AufaPunyaTheme {
-        InfoJurusanList()
+        DaftarInfoScreen()
     }
 }
