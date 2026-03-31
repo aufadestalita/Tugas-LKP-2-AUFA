@@ -110,7 +110,7 @@ fun InfoDetailCard(info: InfoJurusan) {
         ) {
             Text("Lihat Detail Jurusan")
         }
-    }
+    } //update upa
 }
 
 @Preview(showBackground = true)
