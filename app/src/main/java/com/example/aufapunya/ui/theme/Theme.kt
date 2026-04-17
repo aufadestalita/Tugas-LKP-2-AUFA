@@ -11,33 +11,26 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 
+// Schema warna mengikuti identitas visual (Langkah 5 Modul)
+private val AppColorScheme = lightColorScheme(
+    primary = Purple80,    // [cite: 188]
+    secondary = PurpleGrey80, // [cite: 189]
+    background = Pink80, // [cite: 190]
+    surface = Purple40,      // [cite: 191]
+    onPrimary = PurpleGrey40   // [cite: 192]
+)
+
 private val DarkColorScheme = darkColorScheme(
     primary = Purple80,
     secondary = PurpleGrey80,
     tertiary = Pink80
 )
 
-private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
-
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
-    onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
-)
-
 @Composable
 fun AufaPunyaTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
+    // Set dynamicColor ke false agar warna custom Orange-Cream kita yang muncul (sesuai modul)
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
@@ -45,14 +38,13 @@ fun AufaPunyaTheme(
             val context = LocalContext.current
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
-
         darkTheme -> DarkColorScheme
-        else -> LightColorScheme
+        else -> AppColorScheme // Menggunakan skema warna yang kita susun [cite: 196]
     }
 
     MaterialTheme(
         colorScheme = colorScheme,
-        typography = Typography,
+        typography = AppTypography, // Menghubungkan ke AppTypography di Type.kt [cite: 197]
         content = content
     )
 }
