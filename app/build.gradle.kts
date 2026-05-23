@@ -5,11 +5,7 @@ plugins {
 
 android {
     namespace = "com.example.aufapunya"
-    compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
-        }
-    }
+    compileSdk = 36 // Disesuaikan dengan struktur standar Gradle
 
     defaultConfig {
         applicationId = "com.example.aufapunya"
@@ -55,4 +51,7 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+
+    // Library Navigasi yang ditambahkan
+    implementation("androidx.navigation:navigation-compose:2.7.0")
 }
