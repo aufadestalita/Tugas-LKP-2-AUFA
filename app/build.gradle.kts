@@ -5,7 +5,7 @@ plugins {
 
 android {
     namespace = "com.example.aufapunya"
-    compileSdk = 36 // Disesuaikan dengan struktur standar Gradle
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.example.aufapunya"
@@ -36,6 +36,7 @@ android {
 }
 
 dependencies {
+    // Core Dependencies
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -44,6 +45,18 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
+    implementation(libs.coil.compose)
+
+
+
+    // Navigasi
+    implementation("androidx.navigation:navigation-compose:2.7.0")
+
+    // Library untuk Koneksi Internet (Retrofit & Gson)
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+
+    // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -51,7 +64,4 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
-
-    // Library Navigasi yang ditambahkan
-    implementation("androidx.navigation:navigation-compose:2.7.0")
 }

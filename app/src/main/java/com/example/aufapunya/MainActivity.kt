@@ -1,15 +1,13 @@
 package com.example.aufapunya
 
+import com.example.aufapunya.model.InfoJurusan
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
@@ -18,18 +16,18 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import com.example.aufapunya.model.InfoJurusan
-import com.example.aufapunya.model.InfoSource
+import androidx.navigation.compose.*
+import coil.compose.AsyncImage
+import com.example.aufapunya.model.*
+import com.example.aufapunya.network.RetrofitClient
 import com.example.aufapunya.ui.theme.AufaPunyaTheme
 
 class MainActivity : ComponentActivity() {
@@ -46,40 +44,99 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun AppNavigation(navController: NavHostController) {
+fun AppNavigation(navController: androidx.navigation.NavHostController) {
+    var jurusanList by remember { mutableStateOf<List<InfoJurusan>>(emptyList()) }
+
     NavHost(navController = navController, startDestination = "home") {
         composable("home") {
-            DaftarInfoScreen(navController)
+            DaftarJurusanScreen(navController) { jurusanList = it }
         }
         composable("detail/{namaJurusan}") { backStackEntry ->
             val nama = backStackEntry.arguments?.getString("namaJurusan")
-            val info = InfoSource.dummyInfoJurusan.find { it.namaJurusan == nama }
+            val info = jurusanList.find { it.namaJurusan == nama }
             if (info != null) {
-                DetailScreen(info = info, navController = navController, isFullScreen = true)
+                DetailScreen(info = info, navController = navController)
             }
         }
     }
 }
 
 @Composable
-fun DaftarInfoScreen(navController: NavController) {
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(24.dp),
-        verticalArrangement = Arrangement.spacedBy(24.dp)
-    ) {
-        item {
-            Text(text = "Rekomendasi Jurusan", style = MaterialTheme.typography.titleLarge)
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                items(InfoSource.dummyInfoJurusan) { info ->
-                    JurusanRowItem(info = info, navController = navController)
+fun DaftarJurusanScreen(
+    navController: NavController,
+    onJurusanLoaded: (List<InfoJurusan>) -> Unit = {}
+) {
+    var listJurusan by remember { mutableStateOf<List<InfoJurusan>>(emptyList()) }
+    var isLoading by remember { mutableStateOf(true) }
+    var isError by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        try {
+            listJurusan = RetrofitClient.instance.getJurusan()
+            onJurusanLoaded(listJurusan)
+            isLoading = false
+            isError = false
+        } catch (e: Exception) {
+            isLoading = false
+            isError = true
+        }
+    }
+
+    when {
+        isLoading -> {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        }
+
+        isError || listJurusan.isEmpty() -> {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(32.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = "Gagal Memuat Data",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Red
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Pastikan koneksi internet Anda menyala",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.Gray,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
             }
-            Spacer(modifier = Modifier.height(32.dp))
-            Text(text = "Daftar Semua Jurusan", style = MaterialTheme.typography.titleLarge)
         }
-        items(InfoSource.dummyInfoJurusan) { info ->
-            InfoDetailCard(info = info, navController = navController)
+
+        else -> {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                item {
+                    Text(
+                        text = "Daftar Jurusan",
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                }
+                items(listJurusan) { info ->
+                    InfoDetailCard(info = info, navController = navController)
+                }
+            }
         }
     }
 }
@@ -87,12 +144,34 @@ fun DaftarInfoScreen(navController: NavController) {
 @Composable
 fun JurusanRowItem(info: InfoJurusan, navController: NavController) {
     Card(
-        modifier = Modifier.width(160.dp).clickable { navController.navigate("detail/${info.namaJurusan}") },
-        shape = RoundedCornerShape(12.dp)
+        modifier = Modifier
+            .width(160.dp)
+            .clickable {
+                navController.navigate("detail/${info.namaJurusan}")
+            },
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        )
     ) {
         Column {
-            Image(painter = painterResource(id = info.imageRes), contentDescription = null, modifier = Modifier.fillMaxWidth().height(100.dp), contentScale = ContentScale.Crop)
-            Text(text = info.namaJurusan, style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(8.dp), maxLines = 1)
+            AsyncImage(
+                model = info.imageUrl,
+                contentDescription = info.namaJurusan,
+                placeholder = painterResource(id = R.drawable.ic_launcher_foreground),
+                error = painterResource(id = R.drawable.ic_launcher_foreground),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(100.dp),
+                contentScale = ContentScale.Crop
+            )
+            Text(
+                text = info.namaJurusan,
+                style = MaterialTheme.typography.titleSmall,
+                modifier = Modifier.padding(8.dp),
+                maxLines = 1
+            )
         }
     }
 }
@@ -101,25 +180,46 @@ fun JurusanRowItem(info: InfoJurusan, navController: NavController) {
 fun InfoDetailCard(info: InfoJurusan, navController: NavController) {
     var isFavorite by remember { mutableStateOf(false) }
 
-    Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp)
+    ) {
         Column {
             Box {
-                Image(painter = painterResource(id = info.imageRes), contentDescription = null, modifier = Modifier.fillMaxWidth().height(200.dp), contentScale = ContentScale.Crop)
+                AsyncImage(
+                    model = info.imageUrl,
+                    contentDescription = info.namaJurusan,
+                    placeholder = painterResource(id = R.drawable.ic_launcher_foreground),
+                    error = painterResource(id = R.drawable.ic_launcher_foreground),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp),
+                    contentScale = ContentScale.Crop
+                )
                 IconButton(
                     onClick = { isFavorite = !isFavorite },
-                    modifier = Modifier.align(Alignment.TopEnd).padding(8.dp)
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(8.dp)
                 ) {
                     Icon(
                         imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                        contentDescription = "Favorite",
+                        contentDescription = null,
                         tint = if (isFavorite) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
             Column(modifier = Modifier.padding(16.dp)) {
-                Text(text = info.namaJurusan, style = MaterialTheme.typography.titleMedium)
+                Text(
+                    text = info.namaJurusan,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
                 Spacer(modifier = Modifier.height(8.dp))
-                Button(onClick = { navController.navigate("detail/${info.namaJurusan}") }, modifier = Modifier.fillMaxWidth()) {
+                Button(
+                    onClick = { navController.navigate("detail/${info.namaJurusan}") },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
                     Text("Lihat Detail")
                 }
             }
@@ -128,46 +228,52 @@ fun InfoDetailCard(info: InfoJurusan, navController: NavController) {
 }
 
 @Composable
-fun DetailScreen(info: InfoJurusan, navController: NavController, isFullScreen: Boolean = false) {
-    var isLoading by remember { mutableStateOf(false) }
-    val coroutineScope = rememberCoroutineScope()
-    val snackbarHostState = remember { SnackbarHostState() }
-
-    Box(modifier = Modifier.fillMaxWidth().padding(24.dp)) {
-        Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Text(text = "Detail: ${info.namaJurusan}", style = MaterialTheme.typography.headlineSmall)
+fun DetailScreen(info: InfoJurusan, navController: NavController) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp)
+    ) {
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp)
+            ) {
+                AsyncImage(
+                    model = info.imageUrl,
+                    contentDescription = info.namaJurusan,
+                    placeholder = painterResource(id = R.drawable.ic_launcher_foreground),
+                    error = painterResource(id = R.drawable.ic_launcher_foreground),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp)
+                        .clip(RoundedCornerShape(12.dp)),
+                    contentScale = ContentScale.Crop
+                )
                 Spacer(modifier = Modifier.height(16.dp))
-                Text(text = info.deskripsi)
-                Spacer(modifier = Modifier.height(24.dp))
+                Text(
+                    text = info.namaJurusan,
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = info.deskripsi,
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+                Spacer(modifier = Modifier.height(8.dp))
                 Button(
-                    onClick = {
-                        if (isFullScreen) {
-                            navController.popBackStack()
-                        } else {
-                            coroutineScope.launch {
-                                isLoading = true
-                                delay(2000)
-                                // Teks snackbar disesuaikan:
-                                snackbarHostState.showSnackbar("Pendaftaran ${info.namaJurusan} berhasil diproses!")
-                                isLoading = false
-                            }
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = !isLoading
+                    onClick = { navController.popBackStack() },
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    if (isLoading) {
-                        CircularProgressIndicator(modifier = Modifier.size(20.dp), color = MaterialTheme.colorScheme.onPrimary, strokeWidth = 2.dp)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Memproses...")
-                    } else {
-
-                        Text(if (isFullScreen) "Kembali" else "Daftar Jurusan Ini")
-                    }
+                    Text("Kembali")
                 }
             }
         }
-        SnackbarHost(hostState = snackbarHostState, modifier = Modifier.align(Alignment.BottomCenter))
     }
 }
