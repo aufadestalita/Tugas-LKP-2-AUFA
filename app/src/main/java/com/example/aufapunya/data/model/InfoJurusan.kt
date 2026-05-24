@@ -1,4 +1,4 @@
-package com.example.aufapunya.model
+package com.example.aufapunya.data.model
 
 import com.google.gson.annotations.SerializedName
 

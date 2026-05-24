@@ -1,6 +1,6 @@
-package com.example.aufapunya.network
+package com.example.aufapunya.data.api
 
-import com.example.aufapunya.model.InfoJurusan
+import com.example.aufapunya.data.model.InfoJurusan
 import retrofit2.http.GET
 
 interface ApiService {

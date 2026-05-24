@@ -1,5 +1,6 @@
 package com.example.aufapunya.network
 
+import com.example.aufapunya.data.api.ApiService
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
